@@ -58,8 +58,6 @@ const parseDateString = (dateString: string) => {
   }
   const startHours = parseInt(startTimeMatch[1], 10)
   const startMinutes = parseInt(startTimeMatch[2], 10)
-  console.log(`startHours=${startHours}, startMinutes=${startMinutes}`)
-  console.log(`date=${new Date(year, month, day, startHours, startMinutes)}`)
 
   const endTimeMatch = timeMatch[1].match(/(\d{1,2}):(\d{2})/)
   if (endTimeMatch?.length != 3) {
