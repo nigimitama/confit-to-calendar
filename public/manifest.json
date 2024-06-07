@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Confit to Calendar",
+  "version": "1.0",
+  "description": "学会運営システム「Confit (confit.atlas.jp)」のイベント情報をGoogleカレンダーに追加するのを補助します。",
+  "permissions": ["activeTab", "contextMenus", "tabs", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "48": "./48.png"
+  }
+}
