@@ -10,7 +10,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         addButton: "src/addButton.ts",
-        extractEventInfo: "src/extractEventInfo.ts",
         background: "src/background.ts",
       },
       output: {
