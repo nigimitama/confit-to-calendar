@@ -3,7 +3,10 @@ import { generateCalendarURL } from "./calendar"
 const ItemId = "addCalendar"
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
+  chrome.contextMenus.removeAll()
   chrome.tabs.get(activeInfo.tabId, (tab) => {
+    if (tab.id === undefined) return
+
     const url = tab?.url
     if (typeof url === "string" && url.includes("confit.atlas.jp") && url.includes("subject")) {
       console.log("Confitサイトにアクセスしました:", tab.url)
@@ -13,8 +16,11 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
         title: "Googleカレンダーに追加",
         contexts: ["all"],
       })
-    } else {
-      chrome.contextMenus.remove(ItemId)
+
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["addButton.js"],
+      })
     }
   })
 })

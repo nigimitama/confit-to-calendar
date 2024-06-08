@@ -1,7 +1,6 @@
 import { getDates, getDetails, getLocation, getTitle } from "./parser"
 
-// main
-;(function () {
+const extractEventInfoToCreateCalendarURL = () => {
   const [startDate, endDate] = getDates()
   chrome.runtime.sendMessage({
     url: document.URL,
@@ -11,4 +10,8 @@ import { getDates, getDetails, getLocation, getTitle } from "./parser"
     location: getLocation(),
     details: getDetails(),
   })
-})()
+}
+
+;(function () {
+  extractEventInfoToCreateCalendarURL()
+})

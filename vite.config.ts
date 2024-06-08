@@ -8,6 +8,7 @@ export default defineConfig({
     outDir: outDir,
     rollupOptions: {
       input: {
+        addButton: "src/addButton.ts",
         background: "src/background.ts",
         calendar: "src/calendar.ts",
         extractEventInfo: "src/extractEventInfo.ts",
