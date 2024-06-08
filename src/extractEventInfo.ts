@@ -1,4 +1,5 @@
 import { getDates, getDetails, getLocation, getTitle } from "./parser"
+// トランスパイル時にextractEventInfo.jsがempty chunkになることを防ぐために関数化せず書く
 ;(function () {
   const [startDate, endDate] = getDates()
   chrome.runtime.sendMessage({
@@ -9,4 +10,4 @@ import { getDates, getDetails, getLocation, getTitle } from "./parser"
     location: getLocation(),
     details: getDetails(),
   })
-})
+})()

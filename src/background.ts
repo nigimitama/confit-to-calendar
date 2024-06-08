@@ -1,11 +1,10 @@
-import { addButtonToConfitPage } from "./backgroundModules"
 import { generateCalendarURL } from "./calendar"
 
 const ItemId = "addCalendar"
 
-chrome.tabs.onActivated.addListener((activeInfo) => {
+const setupButton = (tabId: number) => {
   chrome.contextMenus.removeAll()
-  chrome.tabs.get(activeInfo.tabId, (tab) => {
+  chrome.tabs.get(tabId, (tab) => {
     if (tab.id === undefined) return
 
     const url = tab?.url
@@ -19,12 +18,21 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
       })
 
       chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: addButtonToConfitPage,
-        // files: ["addButton.js"],
+        target: { tabId: tabId },
+        files: ["addButton.js"],
       })
     }
   })
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, _) => {
+  if (changeInfo.status === "complete") {
+    setupButton(tabId)
+  }
+})
+
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  setupButton(activeInfo.tabId)
 })
 
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
