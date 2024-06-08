@@ -12,9 +12,11 @@ const setupButton = (tabId: number) => {
   chrome.tabs.get(tabId, (tab) => {
     if (tab.id === undefined || tab?.url === undefined) return
 
-    const isEventPage = tab.url.includes("confit.atlas.jp") && tab.url.includes("subject")
+    const isConfit = tab.url.includes("confit.atlas.jp")
+    const isSessionPage = isConfit && tab.url.includes("session")
+    const isEventPage = isConfit && tab.url.includes("subject")
     const isCalendar = tab.url.includes("calendar.google.com")
-    if (isEventPage && !isCalendar) {
+    if ((isEventPage || isSessionPage) && !isCalendar) {
       console.log("Confitにアクセスしました:", tab.url)
 
       chrome.scripting.executeScript({

@@ -18,7 +18,7 @@ export const getLocation = () => {
   return placeSpan?.innerText
 }
 
-export const getDetails = () => {
+export const getDetailsFromSubjectPage = () => {
   const authorElement: HTMLElement | null = document.querySelector(".content > .author")
   const author = authorElement?.innerText || ""
 
@@ -29,6 +29,21 @@ export const getDetails = () => {
   const outline = outlineElement?.innerText || ""
 
   return `${author}\n${keyword}\n\n${outline}`
+}
+
+// セッションのページからsubjects（講演情報）を取得する
+export const getDetailsFromSessionPage = () => {
+  const subjects: NodeListOf<HTMLElement> = document.querySelectorAll(".sbject-box")
+
+  let details = ""
+  for (const subject of subjects) {
+    const titleTag: HTMLElement | null = subject.querySelector(".sbjtitle")
+    const title = titleTag?.innerText || ""
+    const contentTag: HTMLElement | null = subject.querySelector(".sbjcontent")
+    const author = contentTag?.innerText || ""
+    details += `${title}\n${author}\n\n`
+  }
+  return "\n" + details.trim()
 }
 
 const parseDateString = (dateString: string) => {
