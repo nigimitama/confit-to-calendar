@@ -5,7 +5,7 @@ const outDir = resolve(__dirname, "dist")
 
 export default defineConfig({
   build: {
-    minify: false,
+    minify: true,
     outDir: outDir,
     rollupOptions: {
       input: {
