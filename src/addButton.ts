@@ -1,4 +1,10 @@
-import { getDates, getDetails, getLocation, getTitle } from "./parser"
+import {
+  getDates,
+  getDetailsFromSessionPage,
+  getDetailsFromSubjectPage,
+  getLocation,
+  getTitle,
+} from "./parser"
 
 // svgファイルのパスを指定する方法がうまくいかなかったので一旦直接SVGタグを入れる
 const calendarIcon = `
@@ -18,7 +24,8 @@ const calendarIcon = `
 </g>
 </svg>`
 
-const extractEventInfo = () => {
+const extractEventInfo = (isSessionPage: boolean) => {
+  const details = isSessionPage ? getDetailsFromSessionPage() : getDetailsFromSubjectPage()
   const [startDate, endDate] = getDates()
   chrome.runtime.sendMessage({
     url: document.URL,
@@ -26,7 +33,7 @@ const extractEventInfo = () => {
     startDate: startDate,
     endDate: endDate,
     location: getLocation(),
-    details: getDetails(),
+    details: details,
   })
 }
 
@@ -80,9 +87,10 @@ const toInlineButton = (button: HTMLButtonElement) => {
   const isAlreadyExist = document.getElementById(BUTTON_ID) !== null
   if (isAlreadyExist) return
 
+  const isSessionPage = document.URL.includes("session") && !document.URL.includes("subject")
   const button = createButton()
   button.addEventListener("click", () => {
-    extractEventInfo()
+    extractEventInfo(isSessionPage)
   })
 
   // headertools: 「印刷」のボタンがあるエリア
