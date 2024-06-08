@@ -1,16 +1,30 @@
 import { generateCalendarURL } from "./calendar"
 
+const removeButton = () => {
+  const BUTTON_ID = "ConfitToGoogleCalendar"
+  const button = document.getElementById(BUTTON_ID)
+  if (button && button.parentElement) {
+    button.parentElement.removeChild(button)
+  }
+}
+
 const setupButton = (tabId: number) => {
   chrome.tabs.get(tabId, (tab) => {
-    if (tab.id === undefined) return
+    if (tab.id === undefined || tab?.url === undefined) return
 
-    const url = tab?.url
-    if (typeof url === "string" && url.includes("confit.atlas.jp") && url.includes("subject")) {
-      console.log("Confitサイトにアクセスしました:", tab.url)
+    const isEventPage = tab.url.includes("confit.atlas.jp") && tab.url.includes("subject")
+    const isCalendar = tab.url.includes("calendar.google.com")
+    if (isEventPage && !isCalendar) {
+      console.log("Confitにアクセスしました:", tab.url)
 
       chrome.scripting.executeScript({
         target: { tabId: tabId },
         files: ["addButton.js"],
+      })
+    } else {
+      chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        func: removeButton,
       })
     }
   })
@@ -26,7 +40,7 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   setupButton(activeInfo.tabId)
 })
 
-// extractEventInfo.js で実行した結果をmessageで受け取り、タブを開く
+// messageでイベント情報が送られてきたらタブを開く
 chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
   const details = `${message.url}\n\n${message.title}\n${message.details}`
   console.log("message:", message)
