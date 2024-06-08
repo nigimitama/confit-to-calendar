@@ -1,3 +1,4 @@
+import { addButtonToConfitPage } from "./backgroundModules"
 import { generateCalendarURL } from "./calendar"
 
 const ItemId = "addCalendar"
@@ -19,7 +20,8 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
       chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        files: ["addButton.js"],
+        func: addButtonToConfitPage,
+        // files: ["addButton.js"],
       })
     }
   })
@@ -31,6 +33,7 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
   if (info.menuItemId === ItemId) {
     if (tab.id === undefined) return
 
+    // NOTE: jsファイルを指定する場合、viteのトランスパイル時にjsファイルがEmpty chunkになると動かなくなる
     chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ["extractEventInfo.js"],
