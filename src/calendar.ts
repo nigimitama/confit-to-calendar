@@ -13,7 +13,7 @@ export const generateCalendarURL = (
   location: string,
   details: string,
 ) => {
-  const baseURL = "https://www.google.com/calendar/render"
+  const baseURL = "https://calendar.google.com/calendar/render"
   let queryParams: QueryParams = {
     action: "TEMPLATE",
     text: title,

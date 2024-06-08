@@ -3,10 +3,11 @@
   "name": "Confit to Calendar",
   "version": "1.0",
   "description": "学会運営システム「Confit (confit.atlas.jp)」のイベント情報をGoogleカレンダーに追加するのを補助します。",
-  "permissions": ["activeTab", "contextMenus", "tabs", "scripting"],
+  "permissions": ["activeTab", "tabs", "scripting"],
   "background": {
     "service_worker": "background.js"
   },
+  "host_permissions": ["https://confit.atlas.jp/*", "https://calendar.google.com/calendar/*"],
   "icons": {
     "48": "./48.png"
   }

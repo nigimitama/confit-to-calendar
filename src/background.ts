@@ -1,35 +1,29 @@
 import { generateCalendarURL } from "./calendar"
 
-const ItemId = "addCalendar"
+const setupButton = (tabId: number) => {
+  chrome.tabs.get(tabId, (tab) => {
+    if (tab.id === undefined) return
 
-chrome.tabs.onActivated.addListener((activeInfo) => {
-  chrome.tabs.get(activeInfo.tabId, (tab) => {
     const url = tab?.url
     if (typeof url === "string" && url.includes("confit.atlas.jp") && url.includes("subject")) {
       console.log("Confitサイトにアクセスしました:", tab.url)
 
-      chrome.contextMenus.create({
-        id: ItemId,
-        title: "Googleカレンダーに追加",
-        contexts: ["all"],
+      chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        files: ["addButton.js"],
       })
-    } else {
-      chrome.contextMenus.remove(ItemId)
     }
   })
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, _) => {
+  if (changeInfo.status === "complete") {
+    setupButton(tabId)
+  }
 })
 
-chrome.contextMenus.onClicked.addListener(function (info, tab) {
-  if (tab === undefined) return
-
-  if (info.menuItemId === ItemId) {
-    if (tab.id === undefined) return
-
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ["extractEventInfo.js"],
-    })
-  }
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  setupButton(activeInfo.tabId)
 })
 
 // extractEventInfo.js で実行した結果をmessageで受け取り、タブを開く
