@@ -13,6 +13,7 @@ export const generateCalendarURL = (
   location: string,
   details: string,
 ) => {
+  // GoogleカレンダーのURLにパラメータをつけたURLを生成する
   const baseURL = "https://calendar.google.com/calendar/render"
   let queryParams: QueryParams = {
     action: "TEMPLATE",

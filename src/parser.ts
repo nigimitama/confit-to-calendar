@@ -42,7 +42,7 @@ const parseDateString = (dateString: string) => {
   const month = parseInt(dateMatch[2], 10) - 1 // 月はDateでは0始まりなので-1する
   const day = parseInt(dateMatch[3], 10)
 
-  // ['13:00', '14:40'] のような配列
+  // NOTE: timeMatchは['13:00', '14:40'] のような配列になる
   const timeMatch = dateString.match(/(\d{1,2}):(\d{1,2})/g)
   if (timeMatch?.length != 2) {
     console.error(`時間の解析に失敗しました (dateString=${dateString}, timeMatch=${timeMatch})`)

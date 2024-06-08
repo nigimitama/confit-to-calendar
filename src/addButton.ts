@@ -85,7 +85,7 @@ const toInlineButton = (button: HTMLButtonElement) => {
     extractEventInfo()
   })
 
-  // headertools: 「印刷」のボタンがあるとこ
+  // headertools: 「印刷」のボタンがあるエリア
   const headertools = document.querySelector("div.headertools")
   if (headertools === null) {
     const floatingButton = toFloatingButton(button)
