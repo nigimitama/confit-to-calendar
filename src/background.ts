@@ -42,15 +42,25 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   setupButton(activeInfo.tabId)
 })
 
+// GETリクエストのパラメータの上限に達しそうであれば短くする
+const shortenDetailsIfTooLong = (details: string) => {
+  // 日本語はエンコーディングでかなり文字数が増えるので控えめに上限設定
+  if (details.length >= 1000) {
+    return details.slice(0, 1000) + "..."
+  }
+  return details
+}
+
 // messageでイベント情報が送られてきたらタブを開く
 chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
-  const details = `${message.url}\n\n${message.title}\n${message.details}`
+  const details = shortenDetailsIfTooLong(message.details)
+  const describe = `${message.url}\n\n${message.title}\n${details}`
   const calendarURL = generateCalendarURL(
     message.title,
     new Date(message.startDate), // stringになっているのでDateにする
     new Date(message.endDate),
     message.location,
-    details,
+    describe,
   )
   // 新しいタブでCalendarの入力画面を開く
   chrome.tabs.create({ url: calendarURL })
