@@ -42,10 +42,17 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   setupButton(activeInfo.tabId)
 })
 
+// カレンダーの予定の説明文にConfitのURLを入れたい場合であっても、パラメータつきのURLだと破綻するのでパラメータを除去する
+const removeParams = (url: string) => {
+  const urlObj = new URL(url)
+  urlObj.search = ""
+  return urlObj.toString()
+}
+
 // messageでイベント情報が送られてきたらタブを開く
 chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
-  const details = `${message.url}\n\n${message.title}\n${message.details}`
-  console.log("message:", message)
+  const url = removeParams(message.url)
+  const details = `${url}\n\n${message.title}\n${message.details}`
   const calendarURL = generateCalendarURL(
     message.title,
     new Date(message.startDate), // stringになっているのでDateにする
