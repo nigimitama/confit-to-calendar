@@ -3,14 +3,6 @@ export const getTitle = () => {
   return titleH1?.innerText
 }
 
-export const getDates = () => {
-  const dateSpan: HTMLSpanElement | null = document.querySelector("p.dateplace > span:nth-child(1)")
-  const dateString = dateSpan?.innerText
-  if (dateString === undefined) return [null, null]
-
-  return parseDateString(dateString)
-}
-
 export const getLocation = () => {
   const placeSpan: HTMLSpanElement | null = document.querySelector(
     "p.dateplace > span:nth-child(2)",
@@ -46,6 +38,42 @@ export const getDetailsFromSessionPage = () => {
   return "\n" + details.trim()
 }
 
+export const getDateTimes = () => {
+  let [sessionStart, sessionEnd] = getDates()
+
+  const isPresentationPage = document.URL.includes("subject")
+  if (!isPresentationPage) {
+    return [sessionStart, sessionEnd]
+  }
+
+  // もし個別のプレゼンのページなら、セッションの時刻ではなくプレゼンの時刻を使う
+  try {
+    return getTimeOfPresentation(sessionStart ?? new Date())
+  } catch (e) {
+    console.error("プレゼンの時間の取得に失敗しました", e)
+    return getDates()
+  }
+}
+
+const getDates = () => {
+  const dateSpan: HTMLSpanElement | null = document.querySelector("p.dateplace > span:nth-child(1)")
+  const dateString = dateSpan?.innerText
+  if (dateString === undefined) return [null, null]
+
+  return parseDateString(dateString)
+}
+
+const getTimeOfPresentation = (sessionDate: Date) => {
+  // 個別のプレゼンテーションのページから時間を取得する
+  const time: HTMLSpanElement | null = document.querySelector(
+    "#ev-sbjct > div > section > article > div.clear > p",
+  )
+  const timeString = time?.innerText
+  if (timeString === undefined) return [null, null]
+
+  return parseTimeString(timeString, sessionDate)
+}
+
 const parseDateString = (dateString: string) => {
   // '2024年5月28日(火) 13:00 〜 14:40' のような表記をパースする
   const dateMatch = dateString.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/)
@@ -57,10 +85,19 @@ const parseDateString = (dateString: string) => {
   const month = parseInt(dateMatch[2], 10) - 1 // 月はDateでは0始まりなので-1する
   const day = parseInt(dateMatch[3], 10)
 
+  const sessionDate = new Date(year, month, day, 0, 0)
+  return parseTimeString(dateString, sessionDate)
+}
+
+const parseTimeString = (timeString: string, sessionDate: Date): Date[] => {
+  const year = sessionDate.getFullYear()
+  const month = sessionDate.getMonth() + 1 // 0〜11 → +1して 1〜12 に
+  const day = sessionDate.getDate()
+
   // NOTE: timeMatchは['13:00', '14:40'] のような配列になる
-  const timeMatch = dateString.match(/(\d{1,2}):(\d{1,2})/g)
+  const timeMatch = timeString.match(/(\d{1,2}):(\d{1,2})/g)
   if (timeMatch?.length != 2) {
-    console.error(`時間の解析に失敗しました (dateString=${dateString}, timeMatch=${timeMatch})`)
+    console.error(`時間の解析に失敗しました (timeString=${timeString}, timeMatch=${timeMatch})`)
     return [new Date(year, month, day, 0, 0), new Date(year, month, day, 0, 0)]
   }
 

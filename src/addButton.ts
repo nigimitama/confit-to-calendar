@@ -1,5 +1,5 @@
 import {
-  getDates,
+  getDateTimes,
   getDetailsFromSessionPage,
   getDetailsFromSubjectPage,
   getLocation,
@@ -26,7 +26,8 @@ const calendarIcon = `
 
 const extractEventInfo = (isSessionPage: boolean) => {
   const details = isSessionPage ? getDetailsFromSessionPage() : getDetailsFromSubjectPage()
-  const [startDate, endDate] = getDates()
+  const [startDate, endDate] = getDateTimes()
+
   chrome.runtime.sendMessage({
     url: document.URL,
     title: getTitle(),
