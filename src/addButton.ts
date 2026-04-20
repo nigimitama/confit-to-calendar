@@ -4,7 +4,7 @@ import {
   getDetailsFromSubjectPage,
   getLocation,
   getTitle,
-} from "./parser"
+} from "@/parser"
 
 // svgファイルのパスを指定する方法がうまくいかなかったので一旦直接SVGタグを入れる
 const calendarIcon = `
@@ -83,8 +83,7 @@ const toInlineButton = (button: HTMLButtonElement) => {
   return button
 }
 
-// トランスパイル時にextractEventInfo.jsがempty chunkになることを防ぐために関数化せず書く
-;(function () {
+const addButton = () => {
   const isAlreadyExist = document.getElementById(BUTTON_ID) !== null
   if (isAlreadyExist) return
 
@@ -103,4 +102,6 @@ const toInlineButton = (button: HTMLButtonElement) => {
     const inlineButton = toInlineButton(button)
     headertools.appendChild(inlineButton)
   }
-})()
+}
+
+addButton()

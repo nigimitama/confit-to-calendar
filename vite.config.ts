@@ -1,20 +1,27 @@
-import { resolve } from "path"
-import { defineConfig } from "vite"
-
-const outDir = resolve(__dirname, "dist")
+import path from 'node:path'
+import { crx } from '@crxjs/vite-plugin'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import zip from 'vite-plugin-zip-pack'
+import manifest from './manifest.config.js'
+import { name, version } from './package.json'
 
 export default defineConfig({
-  build: {
-    minify: true,
-    outDir: outDir,
-    rollupOptions: {
-      input: {
-        addButton: "src/addButton.ts",
-        background: "src/background.ts",
-      },
-      output: {
-        entryFileNames: "[name].js",
-      },
+  resolve: {
+    alias: {
+      '@': `${path.resolve(__dirname, 'src')}`,
+    },
+  },
+  plugins: [
+    react(),
+    crx({ manifest }),
+    zip({ outDir: 'release', outFileName: `crx-${name}-${version}.zip` }),
+  ],
+  server: {
+    cors: {
+      origin: [
+        /chrome-extension:\/\//,
+      ],
     },
   },
 })
