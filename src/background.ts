@@ -1,4 +1,4 @@
-import { generateCalendarURL } from "@/calendar"
+import { generateCalendarURL } from "@/shared/calendar"
 
 // GETリクエストのパラメータの上限に達しそうであれば短くする
 const shortenDetailsIfTooLong = (details: string) => {
