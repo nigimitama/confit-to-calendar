@@ -8,7 +8,7 @@ export default defineManifest({
   icons: {
     48: "public/48.png",
   },
-  host_permissions: ["https://confit.atlas.jp/*"],
+  host_permissions: ["https://confit.atlas.jp/*", "https://pub.confit.atlas.jp/*"],
   permissions: ["activeTab", "tabs", "scripting"],
   background: {
     service_worker: "src/background.ts",
@@ -19,6 +19,8 @@ export default defineManifest({
       matches: [
         "https://confit.atlas.jp/*/session/*",
         "https://confit.atlas.jp/*/subject/*",
+        "https://pub.confit.atlas.jp/*/session/*",
+        "https://pub.confit.atlas.jp/*/subject/*",
       ],
       js: ["src/addButton.ts"],
     },
