@@ -1,132 +1,116 @@
 // pub.confit.atlas.jp 用のパーサー
-// TODO: 実際のDOMを確認してセレクターを適切に修正してください
+// Next.js SPA なので DOM セレクターではなく __NEXT_DATA__ JSON からデータを取得する
 
-export const getTitle = () => {
-  // TODO: 新サイトのタイトル要素のセレクターに変更する
-  const el: HTMLElement | null = document.querySelector("h1")
-  return el?.innerText
+interface PresentationData {
+  displayNumber: string
+  presentationTitle: string
+  presenter: string  // HTML タグ含む (例: "著者<sup>1</sup>")
+  institution: string
+  beginTime: string  // "2026-06-08 13:40:00"
+  endTime: string    // "2026-06-08 13:55:00"
+  summary: string
+  keyword: string
 }
 
-export const getLocation = () => {
-  // TODO: 新サイトの場所要素のセレクターに変更する
-  const el: HTMLElement | null = document.querySelector("[class*='room'], [class*='place'], [class*='location']")
-  return el?.innerText
+interface SessionData {
+  beginDate: string  // "2026-06-08"
+  beginTime: string  // "13:40"
+  endTime: string    // "15:10"
+  hall: string
+  sessionTitle: string
+  displayNumber: string
 }
 
-export const getDetailsFromSubjectPage = () => {
-  // TODO: 新サイトの発表ページの著者・キーワード・概要要素のセレクターに変更する
-  const authorEl: HTMLElement | null = document.querySelector("[class*='author']")
-  const author = authorEl?.innerText || ""
+interface NextDataState {
+  presentation?: {
+    presentation?: PresentationData
+    session?: SessionData
+  }
+}
 
-  const keywordEl: HTMLElement | null = document.querySelector("[class*='keyword']")
-  const keyword = keywordEl?.innerText || ""
+const getNextDataState = (): NextDataState | null => {
+  const el = document.getElementById("__NEXT_DATA__")
+  if (!el?.textContent) return null
+  try {
+    const json = JSON.parse(el.textContent)
+    return json?.props?.pageProps?.initialState ?? null
+  } catch {
+    return null
+  }
+}
 
-  const outlineEl: HTMLElement | null = document.querySelector("[class*='abstract'], [class*='outline']")
-  const outline = outlineEl?.innerText || ""
+export const getTitle = (): string | undefined => {
+  const state = getNextDataState()
+  const pres = state?.presentation?.presentation
+  if (!pres) return undefined
+  return `[${pres.displayNumber}] ${pres.presentationTitle}`
+}
+
+export const getLocation = (): string | undefined => {
+  const state = getNextDataState()
+  return state?.presentation?.session?.hall
+}
+
+export const getDetailsFromSubjectPage = (): string => {
+  const state = getNextDataState()
+  const pres = state?.presentation?.presentation
+  if (!pres) return ""
+
+  // presenter フィールドの HTML タグを除去する
+  const presenterText = pres.presenter.replace(/<[^>]+>/g, "")
+  const author = `${presenterText} (${pres.institution})`
+  const keyword = pres.keyword
+  const outline = pres.summary
 
   return `${author}\n${keyword}\n\n${outline}`
 }
 
-// セッションのページからsubjects（講演情報）を取得する
-export const getDetailsFromSessionPage = () => {
-  // TODO: 新サイトのセッション内の発表リスト要素のセレクターに変更する
-  const subjects: NodeListOf<HTMLElement> = document.querySelectorAll("[class*='subject'], [class*='presentation']")
-
-  let details = ""
-  for (const subject of subjects) {
-    const titleEl: HTMLElement | null = subject.querySelector("[class*='title']")
-    const title = titleEl?.innerText || ""
-    const authorEl: HTMLElement | null = subject.querySelector("[class*='author'], [class*='speaker']")
-    const author = authorEl?.innerText || ""
-    details += `${title}\n${author}\n\n`
-  }
-  return "\n" + details.trim()
+// セッションのページから講演情報の一覧を取得する
+// TODO: セッションページの __NEXT_DATA__ 構造を確認して実装する
+export const getDetailsFromSessionPage = (): string => {
+  return ""
 }
 
-export const getDateTimes = () => {
-  let [sessionStart, sessionEnd] = getDates()
+export const getDateTimes = (): (Date | null)[] => {
+  const state = getNextDataState()
+  const session = state?.presentation?.session
+  const pres = state?.presentation?.presentation
 
-  const isPresentationPage = document.URL.includes("subject")
-  if (!isPresentationPage) {
+  if (!session) return [null, null]
+
+  const isPresentationPage = document.URL.includes("/presentation/")
+
+  // セッションの日時
+  const sessionStart = parseSessionDateTime(session.beginDate, session.beginTime)
+  const sessionEnd = parseSessionDateTime(session.beginDate, session.endTime)
+
+  if (!isPresentationPage || !pres) {
     return [sessionStart, sessionEnd]
   }
 
-  // もし個別のプレゼンのページなら、セッションの時刻ではなくプレゼンの時刻を使う
-  try {
-    return getTimeOfPresentation(sessionStart ?? new Date())
-  } catch (e) {
-    console.error("プレゼンの時間の取得に失敗しました", e)
-    return getDates()
-  }
+  // 個別発表のページなら発表の時刻を使う
+  const presStart = parseIsoLikeDateTime(pres.beginTime)
+  const presEnd = parseIsoLikeDateTime(pres.endTime)
+  return [presStart ?? sessionStart, presEnd ?? sessionEnd]
 }
 
-const getDates = () => {
-  // TODO: 新サイトの日時要素のセレクターに変更する
-  const el: HTMLElement | null = document.querySelector("[class*='date'], [class*='time'], [class*='schedule']")
-  const dateString = el?.innerText
-  if (dateString === undefined) return [null, null]
-
-  return parseDateString(dateString)
+// "2026-06-08" + "13:40" → Date (ローカルタイム)
+const parseSessionDateTime = (date: string, time: string): Date | null => {
+  const dateParts = date.match(/(\d{4})-(\d{2})-(\d{2})/)
+  const timeParts = time.match(/(\d{1,2}):(\d{2})/)
+  if (!dateParts || !timeParts) return null
+  return new Date(
+    parseInt(dateParts[1]), parseInt(dateParts[2]) - 1, parseInt(dateParts[3]),
+    parseInt(timeParts[1]), parseInt(timeParts[2]),
+  )
 }
 
-const getTimeOfPresentation = (sessionDate: Date) => {
-  // TODO: 新サイトの個別発表の時間要素のセレクターに変更する
-  const el: HTMLElement | null = document.querySelector("[class*='time']")
-  const timeString = el?.innerText
-  if (timeString === undefined) return [null, null]
-
-  return parseTimeString(timeString, sessionDate)
-}
-
-const parseDateString = (dateString: string) => {
-  // '2024年5月28日(火) 13:00 〜 14:40' のような表記をパースする
-  const dateMatch = dateString.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/)
-  if (dateMatch === null) {
-    console.error("日付の解析に失敗しました")
-    return [null, null]
-  }
-  const year = parseInt(dateMatch[1], 10)
-  const month = parseInt(dateMatch[2], 10) - 1 // 月はDateでは0始まりなので-1する
-  const day = parseInt(dateMatch[3], 10)
-
-  const sessionDate = new Date(year, month, day, 0, 0)
-  return parseTimeString(dateString, sessionDate)
-}
-
-const parseTimeString = (timeString: string, sessionDate: Date): Date[] => {
-  const year = sessionDate.getFullYear()
-  const month = sessionDate.getMonth() + 1 // 0〜11 → +1して 1〜12 に
-  const day = sessionDate.getDate()
-
-  // NOTE: timeMatchは['13:00', '14:40'] のような配列になる
-  const timeMatch = timeString.match(/(\d{1,2}):(\d{1,2})/g)
-  if (timeMatch?.length != 2) {
-    console.error(`時間の解析に失敗しました (timeString=${timeString}, timeMatch=${timeMatch})`)
-    return [new Date(year, month, day, 0, 0), new Date(year, month, day, 0, 0)]
-  }
-
-  const startTimeMatch = timeMatch[0].match(/(\d{1,2}):(\d{2})/)
-  if (startTimeMatch?.length != 3) {
-    console.error(
-      `時間の解析に失敗しました (timeMatch[0]=${timeMatch[0]}, startTimeMatch=${startTimeMatch})`,
-    )
-    return [new Date(year, month, day, 0, 0), new Date(year, month, day, 0, 0)]
-  }
-  const startHours = parseInt(startTimeMatch[1], 10)
-  const startMinutes = parseInt(startTimeMatch[2], 10)
-
-  const endTimeMatch = timeMatch[1].match(/(\d{1,2}):(\d{2})/)
-  if (endTimeMatch?.length != 3) {
-    console.error(
-      `時間の解析に失敗しました (timeMatch[1]=${timeMatch[1]}, endTimeMatch=${endTimeMatch})`,
-    )
-    return [new Date(year, month, day, startHours, startMinutes), new Date(year, month, day, 0, 0)]
-  }
-  const endHours = parseInt(endTimeMatch[1], 10)
-  const endMinutes = parseInt(endTimeMatch[2], 10)
-
-  return [
-    new Date(year, month, day, startHours, startMinutes),
-    new Date(year, month, day, endHours, endMinutes),
-  ]
+// "2026-06-08 13:40:00" → Date (ローカルタイム)
+const parseIsoLikeDateTime = (dateTimeStr: string): Date | null => {
+  const m = dateTimeStr.match(/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/)
+  if (!m) return null
+  return new Date(
+    parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]),
+    parseInt(m[4]), parseInt(m[5]), parseInt(m[6]),
+  )
 }

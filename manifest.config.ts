@@ -20,7 +20,7 @@ export default defineManifest({
         "https://confit.atlas.jp/*/session/*",
         "https://confit.atlas.jp/*/subject/*",
         "https://pub.confit.atlas.jp/*/session/*",
-        "https://pub.confit.atlas.jp/*/subject/*",
+        "https://pub.confit.atlas.jp/*/presentation/*",
       ],
       js: ["src/addButton.ts"],
     },

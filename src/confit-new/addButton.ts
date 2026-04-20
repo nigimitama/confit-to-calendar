@@ -50,7 +50,7 @@ const createButton = () => {
 
   button.style.backgroundColor = "#f6f6f6"
   button.addEventListener("mouseover", function () {
-    button.style.color = "#FFF"
+    button.style.color = "#c9c9c9"
     button.style.backgroundColor = "#0c49c5"
   })
   button.addEventListener("mouseout", function () {
@@ -62,24 +62,14 @@ const createButton = () => {
 
 const toFloatingButton = (button: HTMLButtonElement) => {
   button.style.position = "fixed"
-  button.style.bottom = "20px"
-  button.style.right = "20px"
-  button.style.padding = "10px"
-  return button
-}
-
-const toInlineButton = (button: HTMLButtonElement) => {
-  // TODO: 新サイトの隣接するボタンのスタイルに合わせて調整する
-  button.style.transition = "linear .3s"
-  button.style.color = "#666"
-  button.style.borderRadius = "2px"
+  button.style.bottom = "16px"
+  button.style.right = "80px"
+  button.style.padding = "10px 16px"
+  button.style.borderRadius = "4px"
   button.style.border = "1px solid #bbb"
-  button.style.background = "#f6f6f6"
-  button.style.fontSize = ".9em"
-  button.style.padding = "4px 12px 4px 8px"
-  button.style.margin = "2px"
-  button.style.lineHeight = "25px"
   button.style.cursor = "pointer"
+  button.style.zIndex = "9999"
+  button.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)"
   button.innerHTML = `${calendarIcon} ${button.textContent}`
   return button
 }
@@ -88,21 +78,15 @@ const addButton = () => {
   const isAlreadyExist = document.getElementById(BUTTON_ID) !== null
   if (isAlreadyExist) return
 
-  const isSessionPage = document.URL.includes("session") && !document.URL.includes("subject")
+  // 新サイトは /presentation/ (旧サイトの /subject/ に相当)
+  const isSessionPage =
+    document.URL.includes("/session/") && !document.URL.includes("/presentation/")
   const button = createButton()
   button.addEventListener("click", () => {
     extractEventInfo(isSessionPage)
   })
 
-  // TODO: 新サイトのボタン挿入先の要素セレクターに変更する
-  const toolbar = document.querySelector("[class*='toolbar'], [class*='actions'], [class*='header-tools']")
-  if (toolbar === null) {
-    const floatingButton = toFloatingButton(button)
-    document.body.appendChild(floatingButton)
-  } else {
-    const inlineButton = toInlineButton(button)
-    toolbar.appendChild(inlineButton)
-  }
+  document.body.appendChild(toFloatingButton(button))
 }
 
 export { addButton }
