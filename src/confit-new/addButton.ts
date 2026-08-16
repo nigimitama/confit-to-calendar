@@ -41,6 +41,7 @@ const extractEventInfo = (isSessionPage: boolean) => {
   })
 }
 
+const HOST_ID = "ConfitToGoogleCalendarHost"
 const BUTTON_ID = "ConfitToGoogleCalendar"
 
 const createButton = () => {
@@ -48,6 +49,14 @@ const createButton = () => {
   button.id = BUTTON_ID
   button.textContent = "カレンダーに追加"
 
+  // サイト側のグローバルCSS（button:activeなどのセレクタ、継承されるline-height等)の影響を
+  // 受けないよう、まず全プロパティを初期値にリセットしてから独自のスタイルを当てる
+  button.style.all = "initial"
+  button.style.boxSizing = "border-box"
+  button.style.fontFamily = "sans-serif"
+  button.style.fontSize = "14px"
+  button.style.color = "#666"
+  button.style.cursor = "pointer"
   button.style.backgroundColor = "#f6f6f6"
   button.addEventListener("mouseover", function () {
     button.style.color = "#c9c9c9"
@@ -75,7 +84,7 @@ const toFloatingButton = (button: HTMLButtonElement) => {
 }
 
 const addButton = () => {
-  const isAlreadyExist = document.getElementById(BUTTON_ID) !== null
+  const isAlreadyExist = document.getElementById(HOST_ID) !== null
   if (isAlreadyExist) return
 
   // 新サイトは /presentation/ (旧サイトの /subject/ に相当)
@@ -86,7 +95,13 @@ const addButton = () => {
     extractEventInfo(isSessionPage)
   })
 
-  document.body.appendChild(toFloatingButton(button))
+  // Shadow DOMでラップし、サイト側のCSSがボタンに影響しないようにする
+  const host = document.createElement("div")
+  host.id = HOST_ID
+  const shadowRoot = host.attachShadow({ mode: "open" })
+  shadowRoot.appendChild(toFloatingButton(button))
+
+  document.body.appendChild(host)
 }
 
 export { addButton }
