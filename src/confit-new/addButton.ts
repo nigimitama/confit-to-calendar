@@ -1,5 +1,4 @@
 // pub.confit.atlas.jp 用のコンテンツスクリプト
-// TODO: 新サイトのレイアウトに合わせてボタンの配置・スタイルを調整してください
 
 import {
   getDateTimes,
@@ -87,10 +86,10 @@ const addButton = () => {
   const isAlreadyExist = document.getElementById(HOST_ID) !== null
   if (isAlreadyExist) return
 
-  // 新サイトは /presentation/ (旧サイトの /subject/ に相当)
+  const button = createButton()
+
   const isSessionPage =
     document.URL.includes("/session/") && !document.URL.includes("/presentation/")
-  const button = createButton()
   button.addEventListener("click", () => {
     extractEventInfo(isSessionPage)
   })
