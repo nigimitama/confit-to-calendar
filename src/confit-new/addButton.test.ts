@@ -19,6 +19,13 @@ const setDocumentUrl = (url: string) => {
   Object.defineProperty(document, "URL", { value: url, configurable: true })
 }
 
+// the button lives inside a shadow root (to isolate it from the host page's
+// CSS), so it isn't reachable via document.getElementById
+const getButton = (buttonId: string, hostId: string) => {
+  const host = document.getElementById(hostId)
+  return host?.shadowRoot?.getElementById(buttonId) ?? null
+}
+
 // chrome.runtime.sendMessage() and background.ts communicate across extension
 // contexts via message passing; wiring the mock's sendMessage straight into
 // the background listener lets us assert on the real end-to-end behavior
@@ -51,19 +58,19 @@ describe("confit-new addButton", () => {
   })
 
   it("adds a button to the page", async () => {
-    const { addButton, BUTTON_ID } = await import("@/confit-new/addButton")
+    const { addButton, BUTTON_ID, HOST_ID } = await import("@/confit-new/addButton")
     addButton()
 
-    const button = document.getElementById(BUTTON_ID)
+    const button = getButton(BUTTON_ID, HOST_ID)
     expect(button).not.toBeNull()
     expect(button?.tagName).toBe("BUTTON")
   })
 
   it("opens a Google Calendar tab with the event info when the button is clicked", async () => {
-    const { addButton, BUTTON_ID } = await import("@/confit-new/addButton")
+    const { addButton, BUTTON_ID, HOST_ID } = await import("@/confit-new/addButton")
     addButton()
 
-    const button = document.getElementById(BUTTON_ID) as HTMLButtonElement
+    const button = getButton(BUTTON_ID, HOST_ID) as HTMLButtonElement
     button.click()
 
     expect(mockChrome.tabs.create).toHaveBeenCalledTimes(1)
@@ -80,10 +87,10 @@ describe("confit-new addButton", () => {
   })
 
   it("keeps the button after returning from Google Calendar, and clicking it again opens Google Calendar the same way", async () => {
-    const { addButton, BUTTON_ID } = await import("@/confit-new/addButton")
+    const { addButton, BUTTON_ID, HOST_ID } = await import("@/confit-new/addButton")
     addButton()
 
-    const firstButton = document.getElementById(BUTTON_ID) as HTMLButtonElement
+    const firstButton = getButton(BUTTON_ID, HOST_ID) as HTMLButtonElement
     firstButton.click()
     expect(mockChrome.tabs.create).toHaveBeenCalledTimes(1)
 
@@ -91,9 +98,9 @@ describe("confit-new addButton", () => {
     // in a new tab; the content script's addButton() may run again but must
     // not duplicate the button
     addButton()
-    expect(document.querySelectorAll(`#${BUTTON_ID}`)).toHaveLength(1)
+    expect(document.querySelectorAll(`#${HOST_ID}`)).toHaveLength(1)
 
-    const secondButton = document.getElementById(BUTTON_ID) as HTMLButtonElement
+    const secondButton = getButton(BUTTON_ID, HOST_ID) as HTMLButtonElement
     expect(secondButton).toBe(firstButton)
 
     secondButton.click()

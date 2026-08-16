@@ -103,4 +103,4 @@ const addButton = () => {
   document.body.appendChild(host)
 }
 
-export { addButton, BUTTON_ID }
+export { addButton, BUTTON_ID, HOST_ID }
