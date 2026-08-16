@@ -89,4 +89,4 @@ const addButton = () => {
   document.body.appendChild(toFloatingButton(button))
 }
 
-export { addButton }
+export { addButton, BUTTON_ID }
