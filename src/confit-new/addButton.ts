@@ -82,15 +82,97 @@ const toFloatingButton = (button: HTMLButtonElement) => {
   return button
 }
 
+const NEXT_DATA_ID = "__NEXT_DATA__"
+
+const getNextDataText = () => document.getElementById(NEXT_DATA_ID)?.textContent ?? null
+
+const setButtonStale = (button: HTMLButtonElement, isStale: boolean) => {
+  button.disabled = isStale
+  button.style.opacity = isStale ? "0.5" : "1"
+  button.style.cursor = isStale ? "default" : "pointer"
+  button.title = isStale ? "ページの情報を読み込み中です…" : ""
+}
+
+// DOMが変化しなくなったこと（≒idle）は「データの取得が終わったこと」を意味しない
+// （フェッチ中はDOMが変化しないまま待っているだけのことがある）ため、
+// タイミングだけで判定せず、実際にカレンダー登録へ使う値（タイトル・日時）が
+// 揃っているかどうかで判定する。
+const isPageDataReady = () => {
+  const title = getTitle()
+  const [startDate, endDate] = getDateTimes()
+  return Boolean(title) && startDate !== null && endDate !== null
+}
+
+// 万一データが揃ったことを検知し損ねてもボタンが無効化されたままにならないよう、
+// 一定時間経過したら強制的に復帰させるフェイルセーフ。
+const STALE_MAX_MS = 4000
+
+// Next.js SPA内の画面遷移ではページが再読み込みされずボタンが残り続けるため、
+// URL変更時に一旦ボタンを無効化し、遷移先のデータが実際に揃い次第すぐ再度有効化する。
+// これにより固定時間待つよりも速く、かつ遷移前のセッション情報が誤って
+// カレンダーに追加されるのを防ぐ。
+const watchPageDataFreshness = (button: HTMLButtonElement) => {
+  let knownUrl = document.URL
+  let knownDataText = getNextDataText()
+  let maxTimer: ReturnType<typeof setTimeout> | null = null
+
+  const clearMaxTimer = () => {
+    if (maxTimer !== null) clearTimeout(maxTimer)
+    maxTimer = null
+  }
+
+  const markFresh = () => {
+    clearMaxTimer()
+    setButtonStale(button, false)
+  }
+
+  const check = () => {
+    if (typeof document === "undefined") {
+      observer.disconnect()
+      clearMaxTimer()
+      return
+    }
+
+    const url = document.URL
+    if (url !== knownUrl) {
+      knownUrl = url
+      knownDataText = getNextDataText()
+      setButtonStale(button, true)
+      clearMaxTimer()
+      maxTimer = setTimeout(markFresh, STALE_MAX_MS)
+      return
+    }
+
+    if (!button.disabled) return
+
+    // 遷移直後の待機中: __NEXT_DATA__自体が更新され、かつパース結果
+    // （タイトル・日時）が実際に揃ってから復帰させる
+    const dataText = getNextDataText()
+    if (dataText !== knownDataText) {
+      knownDataText = dataText
+      if (isPageDataReady()) {
+        markFresh()
+      }
+    }
+  }
+
+  const observer = new MutationObserver(check)
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  })
+}
+
 const addButton = () => {
   const isAlreadyExist = document.getElementById(HOST_ID) !== null
   if (isAlreadyExist) return
 
   const button = createButton()
 
-  const isSessionPage =
-    document.URL.includes("/session/") && !document.URL.includes("/presentation/")
   button.addEventListener("click", () => {
+    const isSessionPage =
+      document.URL.includes("/session/") && !document.URL.includes("/presentation/")
     extractEventInfo(isSessionPage)
   })
 
@@ -101,6 +183,8 @@ const addButton = () => {
   shadowRoot.appendChild(toFloatingButton(button))
 
   document.body.appendChild(host)
+
+  watchPageDataFreshness(button)
 }
 
 export { addButton, BUTTON_ID, HOST_ID }
